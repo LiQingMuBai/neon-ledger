@@ -117,7 +117,7 @@ Content-Type: application/json
 
 - `customer_order_no`: 客户生成的订单号，必填且唯一
 - `telegram_user_id`: Telegram 用户 ID，可不传；不传或传 `0` 时不会发送用户通知
-- `amount`: 订单金额，整数，必须大于 10
+- `amount`: 订单金额，整数，必须大于等于 10
 - `phone`: 手机号码，必填，必须包含国家电话区号，例如 `+8613800138000`
 - `status`: 订单状态，创建时可不传或传空，服务端默认 `pending`
 - `notify_status`: 通知状态，创建时可不传或传空，服务端默认 `pending`
@@ -227,48 +227,6 @@ GET /api/v1/orders/lookup?platform_order_no=BK20260621123045A1B2C3D4
 ```
 
 没有传订单号返回 `400 Bad Request`，查不到订单返回 `404 Not Found`。
-
-## 修改订单
-
-```http
-PUT /api/v1/orders/{id}
-Content-Type: application/json
-```
-
-也支持：
-
-```http
-PATCH /api/v1/orders/{id}
-```
-
-请求体：
-
-```json
-{
-  "customer_order_no": "C202606210001",
-  "telegram_user_id": 987654321,
-  "amount": 3999,
-  "phone": "+8613800138000",
-  "status": "paid",
-  "notify_status": "sent"
-}
-```
-
-成功响应：`200 OK`
-
-修改订单时 `status` 和 `notify_status` 不能为空，`amount` 必须大于 10，`phone` 必须包含国家电话区号，例如 `+8613800138000`。
-
-当 `notify_status` 从非 `sent` 修改为 `sent` 且 `telegram_user_id > 0` 时，服务会通过 Telegram Bot 给订单的 `telegram_user_id` 发送通知。没有 Telegram 用户 ID 的订单不会发送用户通知。重复保存 `sent` 不会重复通知。
-
-## 删除订单
-
-```http
-DELETE /api/v1/orders/{id}
-```
-
-成功响应：`204 No Content`
-
-删除为软删除：服务会写入 `deleted_at`，默认查询不会返回已删除订单。
 
 ## 每日已支付订单总额
 

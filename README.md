@@ -5,7 +5,7 @@
 ## 功能
 
 - 订单创建、查询、修改、软删除
-- 创建和修改订单时，手机号必须包含国家电话区号，金额必须大于 10
+- 创建和修改订单时，手机号必须包含国家电话区号，金额必须大于等于 10
 - 创建订单时 Telegram 用户 ID 可为空；为空时修改通知状态不会发送用户通知
 - 创建订单时订单状态和通知状态可为空，默认都是 `pending`
 - 修改订单时订单状态和通知状态不能为空
@@ -94,9 +94,6 @@ API.md
 - `POST /api/v1/orders`
 - `GET /api/v1/orders`
 - `GET /api/v1/orders/lookup`
-- `PUT /api/v1/orders/{id}`
-- `PATCH /api/v1/orders/{id}`
-- `DELETE /api/v1/orders/{id}`
 - `GET /api/v1/orders/daily_totals`
 - `GET /api/v1/orders/daily_status_totals`
 
@@ -107,7 +104,7 @@ X-API-Key: your_api_key
 Authorization: Bearer your_api_key
 ```
 
-内置 HTML5 页面使用 `/login` 登录页，登录成功后通过 Cookie 调用 API。
+内置 HTML5 页面使用 `/login` 登录页，登录成功后通过 Cookie 调用后台管理接口。外部 API Key 不开放修改订单和删除订单。
 
 ## Telegram 通知
 

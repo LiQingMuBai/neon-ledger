@@ -62,6 +62,45 @@ func TestRequireAuthAllowsAPIKey(t *testing.T) {
 	}
 }
 
+func TestRequireAuthBlocksAPIKeyOrderMutation(t *testing.T) {
+	called := false
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := requireAuth(next, "api-secret", "session-secret", true)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/orders/order-id", nil)
+	req.Header.Set("X-API-Key", "api-secret")
+	resp := httptest.NewRecorder()
+
+	handler.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected API key order mutation to return 405, got %d", resp.Code)
+	}
+	if called {
+		t.Fatal("expected blocked API key order mutation not to call next handler")
+	}
+}
+
+func TestRequireAuthAllowsSessionOrderMutation(t *testing.T) {
+	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := requireAuth(next, "api-secret", "session-secret", true)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/orders/order-id", nil)
+	req.AddCookie(sessionCookie(makeSessionValue("admin", "session-secret", time.Now().Add(time.Hour))))
+	resp := httptest.NewRecorder()
+
+	handler.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected session order mutation to pass, got %d", resp.Code)
+	}
+}
+
 func TestRequireAuthAllowsPagesWithLogin(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)

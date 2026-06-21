@@ -103,8 +103,8 @@ func (r CreateOrderRequest) validate(now time.Time) error {
 	if r.TelegramUserID < 0 {
 		return errors.Join(ErrInvalidOrder, errors.New("telegram_user_id must be greater than or equal to 0"))
 	}
-	if r.Amount <= 10 {
-		return errors.Join(ErrInvalidOrder, errors.New("amount must be greater than 10"))
+	if r.Amount < 10 {
+		return errors.Join(ErrInvalidOrder, errors.New("amount must be greater than or equal to 10"))
 	}
 	if strings.TrimSpace(r.Phone) == "" {
 		return errors.Join(ErrInvalidOrder, errors.New("phone is required"))
@@ -129,8 +129,8 @@ func (r UpdateOrderRequest) validate() error {
 	if r.TelegramUserID < 0 {
 		return errors.Join(ErrInvalidOrder, errors.New("telegram_user_id must be greater than or equal to 0"))
 	}
-	if r.Amount <= 10 {
-		return errors.Join(ErrInvalidOrder, errors.New("amount must be greater than 10"))
+	if r.Amount < 10 {
+		return errors.Join(ErrInvalidOrder, errors.New("amount must be greater than or equal to 10"))
 	}
 	if strings.TrimSpace(r.Phone) == "" {
 		return errors.Join(ErrInvalidOrder, errors.New("phone is required"))

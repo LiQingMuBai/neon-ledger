@@ -25,28 +25,9 @@ const templates = [
     body: "",
   },
   {
-    name: "订单号查询",
+    name: "根据订单号查询",
     method: "GET",
     path: "/api/v1/orders/lookup?customer_order_no=C202606210001",
-    body: "",
-  },
-  {
-    name: "修改订单",
-    method: "PUT",
-    path: "/api/v1/orders/{id}",
-    body: {
-      customer_order_no: "C202606210001",
-      telegram_user_id: 987654321,
-      amount: 3999,
-      phone: "+8613800138000",
-      status: "paid",
-      notify_status: "sent",
-    },
-  },
-  {
-    name: "删除订单",
-    method: "DELETE",
-    path: "/api/v1/orders/{id}",
     body: "",
   },
   {

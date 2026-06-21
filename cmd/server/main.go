@@ -174,7 +174,15 @@ func requireAuth(next http.Handler, apiKey, sessionSecret string, apiTestEnabled
 		}
 
 		if strings.HasPrefix(r.URL.Path, "/api/") {
-			if validAPIKey(r, apiKey) || validSession(r, sessionSecret) {
+			apiKeyValid := validAPIKey(r, apiKey)
+			sessionValid := validSession(r, sessionSecret)
+			if apiKeyValid && !sessionValid && isExternalOrderMutation(r.URL.Path, r.Method) {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+				return
+			}
+			if apiKeyValid || sessionValid {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -281,6 +289,15 @@ func isPublicPath(path string) bool {
 
 func isProtectedPage(path string, apiTestEnabled bool) bool {
 	return path == "/" || path == "/orders" || (apiTestEnabled && path == "/api-test")
+}
+
+func isExternalOrderMutation(path, method string) bool {
+	switch method {
+	case http.MethodPut, http.MethodPatch, http.MethodDelete:
+	default:
+		return false
+	}
+	return strings.HasPrefix(path, "/api/v1/orders/")
 }
 
 func validAPIKey(r *http.Request, apiKey string) bool {

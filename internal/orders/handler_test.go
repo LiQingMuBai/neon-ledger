@@ -108,7 +108,7 @@ func TestCreateOrderRequiresPhoneCountryCode(t *testing.T) {
 	}
 }
 
-func TestCreateOrderRequiresAmountGreaterThanTen(t *testing.T) {
+func TestCreateOrderRequiresAmountAtLeastTen(t *testing.T) {
 	store := NewMemoryStore()
 	handler := NewHandler(store)
 	mux := http.NewServeMux()
@@ -117,7 +117,7 @@ func TestCreateOrderRequiresAmountGreaterThanTen(t *testing.T) {
 	body := []byte(`{
 		"customer_order_no":"C202606210102",
 		"telegram_user_id":987654321,
-		"amount":10,
+		"amount":9,
 		"phone":"+8613800138000"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(body))
@@ -127,6 +127,28 @@ func TestCreateOrderRequiresAmountGreaterThanTen(t *testing.T) {
 
 	if resp.Code != http.StatusBadRequest {
 		t.Fatalf("expected status %d, got %d: %s", http.StatusBadRequest, resp.Code, resp.Body.String())
+	}
+}
+
+func TestCreateOrderAllowsAmountEqualTen(t *testing.T) {
+	store := NewMemoryStore()
+	handler := NewHandler(store)
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := []byte(`{
+		"customer_order_no":"C202606210104",
+		"telegram_user_id":987654321,
+		"amount":10,
+		"phone":"+8613800138000"
+	}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(body))
+	resp := httptest.NewRecorder()
+
+	mux.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusCreated {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusCreated, resp.Code, resp.Body.String())
 	}
 }
 
