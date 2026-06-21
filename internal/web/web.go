@@ -9,8 +9,11 @@ import (
 //go:embed static/*
 var staticFiles embed.FS
 
-func RegisterRoutes(mux *http.ServeMux, apiTestEnabled bool) {
-	content := staticContent()
+func RegisterRoutes(mux *http.ServeMux, apiTestEnabled bool) error {
+	content, err := staticContent()
+	if err != nil {
+		return err
+	}
 
 	fileServer := http.FileServer(http.FS(content))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fileServer))
@@ -37,16 +40,22 @@ func RegisterRoutes(mux *http.ServeMux, apiTestEnabled bool) {
 		}
 		http.ServeFileFS(w, r, content, "index.html")
 	})
+	return nil
 }
 
 func ServeLogin(w http.ResponseWriter, r *http.Request) {
-	http.ServeFileFS(w, r, staticContent(), "login.html")
+	content, err := staticContent()
+	if err != nil {
+		http.Error(w, "static content unavailable", http.StatusInternalServerError)
+		return
+	}
+	http.ServeFileFS(w, r, content, "login.html")
 }
 
-func staticContent() fs.FS {
+func staticContent() (fs.FS, error) {
 	content, err := fs.Sub(staticFiles, "static")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return content
+	return content, nil
 }

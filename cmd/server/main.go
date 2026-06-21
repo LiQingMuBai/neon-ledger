@@ -90,7 +90,9 @@ func main() {
 	mux.HandleFunc("/logout", logoutHandler())
 	mux.HandleFunc("/app-config", appConfigHandler(apiTestEnabled))
 	handler.RegisterRoutes(mux)
-	web.RegisterRoutes(mux, apiTestEnabled)
+	if err := web.RegisterRoutes(mux, apiTestEnabled); err != nil {
+		log.Fatal(err)
+	}
 
 	log.Printf("bookkeeping api listening on %s", addr)
 	if err := http.ListenAndServe(addr, logRequests(requireAuth(mux, apiKey, sessionSecret, apiTestEnabled))); err != nil {
