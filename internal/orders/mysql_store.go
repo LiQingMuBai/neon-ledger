@@ -362,8 +362,8 @@ func buildOrderWhereClause(req QueryOrdersRequest) (string, []any) {
 		args = append(args, req.TelegramUserID)
 	}
 	if req.Phone != "" {
-		clauses = append(clauses, "phone = ?")
-		args = append(args, req.Phone)
+		clauses = append(clauses, "phone LIKE ?")
+		args = append(args, "%"+escapeLikePattern(req.Phone)+"%")
 	}
 	if req.Status != "" {
 		clauses = append(clauses, "status = ?")
@@ -385,6 +385,13 @@ func buildOrderWhereClause(req QueryOrdersRequest) (string, []any) {
 		return "", args
 	}
 	return "WHERE " + strings.Join(clauses, " AND "), args
+}
+
+func escapeLikePattern(value string) string {
+	value = strings.ReplaceAll(value, `\`, `\\`)
+	value = strings.ReplaceAll(value, `%`, `\%`)
+	value = strings.ReplaceAll(value, `_`, `\_`)
+	return value
 }
 
 func buildDailyTotalsWhereClause(req DailyTotalsRequest) (string, []any) {

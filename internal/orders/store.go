@@ -137,7 +137,7 @@ func (s *MemoryStore) Query(req QueryOrdersRequest) (QueryOrdersResponse, error)
 		if req.TelegramUserID > 0 && order.TelegramUserID != req.TelegramUserID {
 			continue
 		}
-		if req.Phone != "" && order.Phone != req.Phone {
+		if req.Phone != "" && !strings.Contains(order.Phone, req.Phone) {
 			continue
 		}
 		if req.Status != "" && order.Status != req.Status {

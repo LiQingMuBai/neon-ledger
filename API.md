@@ -155,7 +155,7 @@ GET /api/v1/orders
 - `customer_order_no`: 客户订单号
 - `platform_order_no`: 平台订单号
 - `telegram_user_id`: Telegram 用户 ID
-- `phone`: 手机号码，必须包含国家电话区号，例如 `+8613800138000`
+- `phone`: 手机号码，支持模糊匹配
 - `status`: 订单状态
 - `notify_status`: 通知状态
 - `start_time`: RFC3339 时间，按 `created_at` 过滤

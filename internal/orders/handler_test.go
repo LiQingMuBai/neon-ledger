@@ -306,6 +306,35 @@ func TestLookupOrderValidationAndNotFound(t *testing.T) {
 	}
 }
 
+func TestQueryOrdersMatchesPhonePartially(t *testing.T) {
+	store := NewMemoryStore()
+	handler := NewHandler(store)
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	createOrder(t, mux, `{"customer_order_no":"C202606210301","telegram_user_id":1001,"amount":1200,"phone":"+8613800138000"}`)
+	createOrder(t, mux, `{"customer_order_no":"C202606210302","telegram_user_id":1002,"amount":1200,"phone":"+8613900139000"}`)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/orders?phone=138001", nil)
+	resp := httptest.NewRecorder()
+	mux.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, resp.Code, resp.Body.String())
+	}
+
+	var queried QueryOrdersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&queried); err != nil {
+		t.Fatalf("decode query response: %v", err)
+	}
+	if queried.Total != 1 || len(queried.Items) != 1 {
+		t.Fatalf("expected one partial phone match, got total=%d len=%d", queried.Total, len(queried.Items))
+	}
+	if queried.Items[0].CustomerOrderNo != "C202606210301" {
+		t.Fatalf("unexpected partial phone match: %+v", queried.Items[0])
+	}
+}
+
 func TestUpdateAndDeleteOrder(t *testing.T) {
 	store := NewMemoryStore()
 	handler := NewHandler(store)
