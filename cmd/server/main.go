@@ -81,7 +81,8 @@ func main() {
 		log.Fatal(err)
 	}
 	notifier := notify.NewTelegramNotifier(os.Getenv("TELEGRAM_BOT_TOKEN"), getenv("TELEGRAM_API_BASE", "https://api.telegram.org"), adminChatID)
-	handler := orders.NewHandlerWithNotifier(store, notifier)
+	statusCallback := notify.NewHTTPStatusCallbackSender()
+	handler := orders.NewHandlerWithNotifierAndStatusCallback(store, notifier, statusCallback)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/captcha", captchaHandler(sessionSecret))

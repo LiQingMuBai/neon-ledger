@@ -93,12 +93,13 @@ func telegramOrderText(order orders.Order) string {
 
 func telegramAdminOrderCreatedText(order orders.Order) string {
 	return fmt.Sprintf(
-		"新订单创建\n平台订单号：%s\n客户订单号：%s\nTelegram用户ID：%d\n金额：%d\n手机号：%s\n订单状态：%s\n通知状态：%s",
+		"新订单创建\n平台订单号：%s\n客户订单号：%s\nTelegram用户ID：%d\n金额：%d\n手机号：%s\n回调URL：%s\n订单状态：%s\n通知状态：%s",
 		order.PlatformOrderNo,
 		order.CustomerOrderNo,
 		order.TelegramUserID,
 		order.Amount,
 		order.Phone,
+		order.CallbackURL,
 		order.Status,
 		order.NotifyStatus,
 	)

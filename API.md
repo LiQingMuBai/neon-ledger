@@ -108,6 +108,7 @@ Content-Type: application/json
   "telegram_user_id": 987654321,
   "amount": 3599,
   "phone": "+8613800138000",
+  "callback_url": "https://example.com/callback",
   "status": "pending",
   "notify_status": "pending"
 }
@@ -119,6 +120,7 @@ Content-Type: application/json
 - `telegram_user_id`: Telegram 用户 ID，可不传；不传或传 `0` 时不会发送用户通知
 - `amount`: 订单金额，整数，必须大于等于 10
 - `phone`: 手机号码，必填，必须包含国家电话区号，例如 `+8613800138000`
+- `callback_url`: 回调请求 URL，可不传或传空字符串；传入非空值时必须是 `http://` 或 `https://` URL
 - `status`: 订单状态，创建时可不传或传空，服务端默认 `pending`
 - `notify_status`: 通知状态，创建时可不传或传空，服务端默认 `pending`
 
@@ -134,6 +136,7 @@ Content-Type: application/json
   "telegram_user_id": 987654321,
   "amount": 3599,
   "phone": "+8613800138000",
+  "callback_url": "https://example.com/callback",
   "status": "pending",
   "notify_status": "pending",
   "created_at": "2026-06-21T12:30:45Z",
@@ -179,6 +182,7 @@ GET /api/v1/orders?telegram_user_id=987654321&status=paid&limit=20&offset=0
       "telegram_user_id": 987654321,
       "amount": 3599,
       "phone": "+8613800138000",
+      "callback_url": "https://example.com/callback",
       "status": "paid",
       "notify_status": "sent",
       "created_at": "2026-06-21T12:30:45Z",
@@ -219,6 +223,7 @@ GET /api/v1/orders/lookup?platform_order_no=BK20260621123045A1B2C3D4
   "telegram_user_id": 987654321,
   "amount": 3599,
   "phone": "+8613800138000",
+  "callback_url": "https://example.com/callback",
   "status": "paid",
   "notify_status": "sent",
   "created_at": "2026-06-21T12:30:45Z",
@@ -227,6 +232,26 @@ GET /api/v1/orders/lookup?platform_order_no=BK20260621123045A1B2C3D4
 ```
 
 没有传订单号返回 `400 Bad Request`，查不到订单返回 `404 Not Found`。
+
+## 订单状态回调
+
+后台修改订单时，如果订单 `status` 发生变化，并且订单存在 `callback_url`，服务会向该 URL 发起回调请求。回调失败会输出到终端日志，不影响订单保存。
+
+```http
+POST {callback_url}
+Content-Type: application/json
+```
+
+请求体：
+
+```json
+{
+  "customer_order_no": "C202606210001",
+  "platform_order_no": "BK20260621123045A1B2C3D4",
+  "status": "paid",
+  "phone": "+8613800138000"
+}
+```
 
 ## 每日已支付订单总额
 

@@ -126,7 +126,7 @@ nextPage.addEventListener("click", () => {
 loadOrders();
 
 async function loadOrders() {
-  tableBody.innerHTML = `<tr><td colspan="9" class="empty-cell">加载中</td></tr>`;
+  tableBody.innerHTML = `<tr><td colspan="10" class="empty-cell">加载中</td></tr>`;
   setNotice("");
 
   const params = new URLSearchParams({
@@ -151,7 +151,7 @@ async function loadOrders() {
     renderOrders(data.items);
     renderPagination();
   } catch (error) {
-    tableBody.innerHTML = `<tr><td colspan="9" class="empty-cell">加载失败</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="10" class="empty-cell">加载失败</td></tr>`;
     setNotice(error.message, true);
   }
 }
@@ -159,7 +159,7 @@ async function loadOrders() {
 function renderOrders(items) {
   summaryText.textContent = `${state.total} 条记录`;
   if (!items.length) {
-    tableBody.innerHTML = `<tr><td colspan="9" class="empty-cell">暂无订单</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="10" class="empty-cell">暂无订单</td></tr>`;
     return;
   }
 
@@ -172,6 +172,7 @@ function renderOrders(items) {
           <td>${escapeHtml(String(order.telegram_user_id))}</td>
           <td>${formatAmount(order.amount)}</td>
           <td>${escapeHtml(order.phone)}</td>
+          <td title="${escapeHtml(order.callback_url || "-")}">${escapeHtml(order.callback_url || "-")}</td>
           <td>${renderStatus("status", order.status)}</td>
           <td>${renderStatus("notify", order.notify_status)}</td>
           <td>${formatDate(order.created_at)}</td>
@@ -214,6 +215,7 @@ function openOrderModal(order = null) {
     orderForm.elements.telegram_user_id.value = order.telegram_user_id || "";
     orderForm.elements.amount.value = order.amount || "";
     orderForm.elements.phone.value = order.phone || "";
+    orderForm.elements.callback_url.value = order.callback_url || "";
     orderForm.elements.status.value = order.status || "pending";
     orderForm.elements.notify_status.value = order.notify_status || "pending";
   }

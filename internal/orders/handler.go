@@ -11,8 +11,9 @@ import (
 )
 
 type Handler struct {
-	store    Store
-	notifier Notifier
+	store          Store
+	notifier       Notifier
+	statusCallback StatusCallbackSender
 }
 
 func NewHandler(store Store) *Handler {
@@ -20,10 +21,17 @@ func NewHandler(store Store) *Handler {
 }
 
 func NewHandlerWithNotifier(store Store, notifier Notifier) *Handler {
+	return NewHandlerWithNotifierAndStatusCallback(store, notifier, NoopStatusCallbackSender{})
+}
+
+func NewHandlerWithNotifierAndStatusCallback(store Store, notifier Notifier, statusCallback StatusCallbackSender) *Handler {
 	if notifier == nil {
 		notifier = NoopNotifier{}
 	}
-	return &Handler{store: store, notifier: notifier}
+	if statusCallback == nil {
+		statusCallback = NoopStatusCallbackSender{}
+	}
+	return &Handler{store: store, notifier: notifier, statusCallback: statusCallback}
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
@@ -168,6 +176,11 @@ func (h *Handler) updateOrder(w http.ResponseWriter, r *http.Request, id string)
 		if err := h.notifier.SendOrderNotification(r.Context(), order); err != nil {
 			writeError(w, http.StatusBadGateway, err.Error())
 			return
+		}
+	}
+	if before.Status != order.Status && order.CallbackURL != "" {
+		if err := h.statusCallback.SendStatusCallback(r.Context(), order); err != nil {
+			log.Printf("order status callback failed order_id=%s platform_order_no=%s callback_url=%s error=%v", order.ID, order.PlatformOrderNo, order.CallbackURL, err)
 		}
 	}
 

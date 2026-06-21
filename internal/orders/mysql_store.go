@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS bookkeeping_orders (
 	phone VARCHAR(32) NOT NULL,
 	status VARCHAR(32) NOT NULL DEFAULT 'pending',
 	notify_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+	callback_url VARCHAR(512) NOT NULL DEFAULT '',
 	created_at DATETIME(6) NOT NULL,
 	updated_at DATETIME(6) NOT NULL,
 	deleted_at DATETIME(6) NULL,
@@ -42,6 +43,30 @@ CREATE TABLE IF NOT EXISTS bookkeeping_orders (
 	INDEX idx_notify_status_created_at (notify_status, created_at DESC),
 	INDEX idx_created_at (created_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`)
+	if err != nil {
+		return err
+	}
+	return ensureCallbackURLColumn(ctx, db)
+}
+
+func ensureCallbackURLColumn(ctx context.Context, db *sql.DB) error {
+	var count int
+	if err := db.QueryRowContext(ctx, `
+SELECT COUNT(*)
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+	AND TABLE_NAME = 'bookkeeping_orders'
+	AND COLUMN_NAME = 'callback_url'
+`).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	_, err := db.ExecContext(ctx, `
+ALTER TABLE bookkeeping_orders
+ADD COLUMN callback_url VARCHAR(512) NOT NULL DEFAULT '' AFTER notify_status
 `)
 	return err
 }
@@ -62,14 +87,15 @@ func (s *MySQLStore) Create(req CreateOrderRequest) (Order, error) {
 		Phone:           req.Phone,
 		Status:          req.Status,
 		NotifyStatus:    req.NotifyStatus,
+		CallbackURL:     req.CallbackURL,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
 
 	_, err := s.db.Exec(`
 INSERT INTO bookkeeping_orders (
-	id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, created_at, updated_at, deleted_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, callback_url, created_at, updated_at, deleted_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		order.ID,
 		order.CustomerOrderNo,
 		order.PlatformOrderNo,
@@ -78,6 +104,7 @@ INSERT INTO bookkeeping_orders (
 		order.Phone,
 		order.Status,
 		order.NotifyStatus,
+		order.CallbackURL,
 		order.CreatedAt,
 		order.UpdatedAt,
 		order.DeletedAt,
@@ -102,7 +129,7 @@ func (s *MySQLStore) Update(id string, req UpdateOrderRequest) (Order, error) {
 	now := s.now().UTC()
 	result, err := s.db.Exec(`
 UPDATE bookkeeping_orders
-SET customer_order_no = ?, telegram_user_id = ?, amount = ?, phone = ?, status = ?, notify_status = ?, updated_at = ?
+SET customer_order_no = ?, telegram_user_id = ?, amount = ?, phone = ?, status = ?, notify_status = ?, callback_url = ?, updated_at = ?
 WHERE id = ? AND deleted_at IS NULL`,
 		req.CustomerOrderNo,
 		req.TelegramUserID,
@@ -110,6 +137,7 @@ WHERE id = ? AND deleted_at IS NULL`,
 		req.Phone,
 		req.Status,
 		req.NotifyStatus,
+		req.CallbackURL,
 		now,
 		id,
 	)
@@ -154,7 +182,7 @@ func (s *MySQLStore) getByID(id string, includeDeleted bool) (Order, error) {
 
 	var order Order
 	err := s.db.QueryRow(`
-SELECT id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, created_at, updated_at, deleted_at
+SELECT id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, callback_url, created_at, updated_at, deleted_at
 FROM bookkeeping_orders
 `+where, id).Scan(
 		&order.ID,
@@ -165,6 +193,7 @@ FROM bookkeeping_orders
 		&order.Phone,
 		&order.Status,
 		&order.NotifyStatus,
+		&order.CallbackURL,
 		&order.CreatedAt,
 		&order.UpdatedAt,
 		&order.DeletedAt,
@@ -198,7 +227,7 @@ func (s *MySQLStore) Query(req QueryOrdersRequest) (QueryOrdersResponse, error) 
 
 	queryArgs := append(append([]any{}, args...), req.Limit, req.Offset)
 	rows, err := s.db.Query(`
-SELECT id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, created_at, updated_at, deleted_at
+SELECT id, customer_order_no, platform_order_no, telegram_user_id, amount, phone, status, notify_status, callback_url, created_at, updated_at, deleted_at
 FROM bookkeeping_orders `+where+`
 ORDER BY created_at DESC
 LIMIT ? OFFSET ?`, queryArgs...)
@@ -219,6 +248,7 @@ LIMIT ? OFFSET ?`, queryArgs...)
 			&order.Phone,
 			&order.Status,
 			&order.NotifyStatus,
+			&order.CallbackURL,
 			&order.CreatedAt,
 			&order.UpdatedAt,
 			&order.DeletedAt,
