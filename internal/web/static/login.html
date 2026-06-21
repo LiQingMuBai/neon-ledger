@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>登录</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="login-page">
+      <section class="login-panel" aria-labelledby="loginTitle">
+        <p class="eyebrow">Bookkeeping API</p>
+        <h1 id="loginTitle">登录</h1>
+        <p class="login-error" id="loginError" hidden>用户名或密码错误</p>
+        <form class="login-form" method="post" action="/login">
+          <input id="nextInput" name="next" type="hidden" />
+          <label>
+            <span>用户名</span>
+            <input name="username" autocomplete="username" required autofocus />
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <label>
+            <span>验证码</span>
+            <div class="captcha-row">
+              <strong id="captchaQuestion">加载中</strong>
+              <button type="button" id="refreshCaptcha">换一题</button>
+            </div>
+            <input name="captcha" inputmode="numeric" autocomplete="off" required />
+          </label>
+          <button class="primary-button" type="submit">登录</button>
+        </form>
+      </section>
+    </main>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      document.querySelector("#nextInput").value = params.get("next") || "/";
+      document.querySelector("#loginError").hidden = params.get("error") !== "1";
+      const captchaQuestion = document.querySelector("#captchaQuestion");
+      async function loadCaptcha() {
+        captchaQuestion.textContent = "加载中";
+        const response = await fetch("/captcha", { credentials: "same-origin" });
+        const data = await response.json();
+        captchaQuestion.textContent = data.question || "请刷新";
+      }
+      document.querySelector("#refreshCaptcha").addEventListener("click", loadCaptcha);
+      loadCaptcha();
+    </script>
+  </body>
+</html>

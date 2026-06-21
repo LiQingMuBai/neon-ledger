@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>接口测试</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">API Tester</p>
+          <h1>接口测试</h1>
+        </div>
+        <nav class="topbar-actions" aria-label="页面导航">
+          <a class="nav-link" href="/">统计首页</a>
+          <a class="nav-link" href="/orders">订单记录</a>
+          <a class="nav-link" href="/logout">退出</a>
+        </nav>
+      </header>
+
+      <main class="api-test-page">
+        <section class="api-test-panel" aria-labelledby="requestTitle">
+          <div class="panel-header">
+            <h2 id="requestTitle">请求</h2>
+          </div>
+
+          <form id="apiTestForm" class="api-test-form">
+            <label>
+              <span>X-API-Key</span>
+              <input name="api_key" autocomplete="off" placeholder="可选；填写后请求会带 X-API-Key" />
+            </label>
+            <label>
+              <span>接口模板</span>
+              <select id="apiTemplate"></select>
+            </label>
+            <div class="api-request-row">
+              <select name="method" aria-label="请求方法">
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>PATCH</option>
+                <option>DELETE</option>
+              </select>
+              <input name="path" aria-label="请求路径" placeholder="/api/v1/orders" required />
+            </div>
+            <label>
+              <span>请求体 JSON</span>
+              <textarea name="body" spellcheck="false" rows="14"></textarea>
+            </label>
+            <button class="primary-button" type="submit">发送请求</button>
+          </form>
+        </section>
+
+        <section class="api-test-panel" aria-labelledby="responseTitle">
+          <div class="panel-header">
+            <h2 id="responseTitle">响应</h2>
+          </div>
+          <div class="api-response-meta" id="responseMeta">等待请求</div>
+          <pre class="api-response-body" id="responseBody">{}</pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="/assets/auth.js" defer></script>
+    <script src="/assets/api-test.js" defer></script>
+  </body>
+</html>

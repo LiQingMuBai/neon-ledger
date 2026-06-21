@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS bookkeeping_orders (
+	id CHAR(32) NOT NULL PRIMARY KEY,
+	customer_order_no VARCHAR(64) NOT NULL,
+	platform_order_no VARCHAR(64) NOT NULL,
+	telegram_user_id BIGINT NOT NULL,
+	amount BIGINT NOT NULL,
+	phone VARCHAR(32) NOT NULL,
+	status VARCHAR(32) NOT NULL DEFAULT 'pending',
+	notify_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+	created_at DATETIME(6) NOT NULL,
+	updated_at DATETIME(6) NOT NULL,
+	deleted_at DATETIME(6) NULL,
+	UNIQUE KEY uk_customer_order_no (customer_order_no),
+	UNIQUE KEY uk_platform_order_no (platform_order_no),
+	INDEX idx_telegram_user_created_at (telegram_user_id, created_at DESC),
+	INDEX idx_phone_created_at (phone, created_at DESC),
+	INDEX idx_status_created_at (status, created_at DESC),
+	INDEX idx_notify_status_created_at (notify_status, created_at DESC),
+	INDEX idx_created_at (created_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

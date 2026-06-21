@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="订单统计" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/assets/manifest.webmanifest" />
+    <title>30天订单趋势</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Dashboard</p>
+          <h1>30天订单状态趋势</h1>
+        </div>
+        <nav class="topbar-actions" aria-label="页面导航">
+          <a class="nav-link" href="/orders">订单记录</a>
+          <a class="nav-link" href="/api-test" data-api-test-link>接口测试</a>
+          <a class="nav-link" href="/logout">退出</a>
+          <button class="icon-button" id="refreshButton" type="button" title="刷新统计" aria-label="刷新统计">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </nav>
+      </header>
+
+      <main class="dashboard">
+        <section class="metric-strip" aria-label="统计概览">
+          <div class="metric">
+            <span>全状态总额</span>
+            <strong id="totalAmount">0</strong>
+          </div>
+          <div class="metric">
+            <span>全状态订单数</span>
+            <strong id="totalOrders">0</strong>
+          </div>
+          <div class="metric">
+            <span>日均金额</span>
+            <strong id="averageAmount">0</strong>
+          </div>
+        </section>
+
+        <section class="chart-section" aria-labelledby="chartTitle">
+          <div class="toolbar dashboard-toolbar">
+            <div>
+              <h2 id="chartTitle">按状态折线趋势</h2>
+              <p id="chartSummary">最近 30 天</p>
+            </div>
+
+            <form id="statsFilterForm" class="filters dashboard-filters">
+              <select name="notify_status">
+                <option value="">全部通知状态</option>
+                <option value="pending">待通知</option>
+                <option value="sent">已通知</option>
+                <option value="failed">通知失败</option>
+              </select>
+              <input name="days" value="30" inputmode="numeric" aria-label="统计天数" />
+              <button type="submit">筛选</button>
+            </form>
+          </div>
+
+          <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+          <div class="chart-wrap">
+            <div class="chart-grid" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div id="lineChart" class="line-chart" role="img" aria-label="最近 30 天按订单状态统计的金额折线图"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/assets/auth.js" defer></script>
+    <script src="/assets/dashboard.js" defer></script>
+  </body>
+</html>

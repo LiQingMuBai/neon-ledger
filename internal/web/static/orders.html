@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="订单记录" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/assets/manifest.webmanifest" />
+    <title>订单记录</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Orders</p>
+          <h1>订单记录</h1>
+        </div>
+        <nav class="topbar-actions" aria-label="页面导航">
+          <a class="nav-link" href="/">统计首页</a>
+          <a class="nav-link" href="/api-test" data-api-test-link>接口测试</a>
+          <a class="nav-link" href="/logout">退出</a>
+          <button class="primary-button compact-button" id="openCreateOrder" type="button">新增订单</button>
+          <button class="icon-button" id="refreshButton" type="button" title="刷新订单" aria-label="刷新订单">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </nav>
+      </header>
+
+      <main class="orders-page">
+        <section class="orders-area" aria-labelledby="ordersTitle">
+          <div class="toolbar">
+            <div>
+              <h2 id="ordersTitle">订单列表</h2>
+              <p id="summaryText">0 条记录</p>
+            </div>
+
+            <form id="filterForm" class="filters">
+              <input name="customer_order_no" placeholder="客户订单号" autocomplete="off" />
+              <input name="platform_order_no" placeholder="平台订单号" autocomplete="off" />
+              <input name="telegram_user_id" placeholder="Telegram ID" inputmode="numeric" />
+              <input name="phone" placeholder="+8613800138000" inputmode="tel" />
+              <select name="status">
+                <option value="">全部订单状态</option>
+                <option value="pending">待处理</option>
+                <option value="paid">已支付</option>
+                <option value="failed">失败</option>
+                <option value="closed">已关闭</option>
+              </select>
+              <select name="notify_status">
+                <option value="">全部通知状态</option>
+                <option value="pending">待通知</option>
+                <option value="sent">已通知</option>
+                <option value="failed">通知失败</option>
+              </select>
+              <button type="submit">筛选</button>
+              <button type="button" id="resetFilters">重置</button>
+            </form>
+          </div>
+
+          <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>客户订单号</th>
+                  <th>平台订单号</th>
+                  <th>Telegram ID</th>
+                  <th>金额</th>
+                  <th>手机号</th>
+                  <th>订单状态</th>
+                  <th>通知状态</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="9" class="empty-cell">加载中</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <button type="button" id="prevPage">上一页</button>
+            <span id="pageText">第 1 页</span>
+            <button type="button" id="nextPage">下一页</button>
+          </div>
+        </section>
+      </main>
+
+      <div class="modal-backdrop" id="orderModal" hidden>
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+          <div class="modal-header">
+            <h2 id="orderModalTitle">新增订单</h2>
+            <button class="icon-button" id="closeOrderModal" type="button" title="关闭" aria-label="关闭">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+
+          <form id="orderForm" class="order-form">
+            <input name="id" type="hidden" />
+            <label>
+              <span>客户订单号</span>
+              <input name="customer_order_no" autocomplete="off" required />
+            </label>
+            <label>
+              <span>Telegram 用户 ID</span>
+              <input name="telegram_user_id" inputmode="numeric" />
+            </label>
+            <label>
+              <span>订单金额</span>
+              <input name="amount" type="number" inputmode="numeric" min="11" required />
+            </label>
+            <label>
+              <span>手机号码</span>
+              <input name="phone" inputmode="tel" placeholder="+8613800138000" pattern="\+[1-9][0-9]{6,14}" required />
+            </label>
+            <label>
+              <span>订单状态</span>
+              <select name="status">
+                <option value="pending">待处理</option>
+                <option value="paid">已支付</option>
+                <option value="failed">失败</option>
+                <option value="closed">已关闭</option>
+              </select>
+            </label>
+            <label>
+              <span>通知状态</span>
+              <select name="notify_status">
+                <option value="pending">待通知</option>
+                <option value="sent">已通知</option>
+                <option value="failed">通知失败</option>
+              </select>
+            </label>
+            <div class="modal-actions">
+              <button type="button" id="cancelOrderModal">取消</button>
+              <button class="primary-button" id="saveOrderButton" type="submit">保存</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <script src="/assets/auth.js" defer></script>
+    <script src="/assets/orders.js" defer></script>
+  </body>
+</html>
