@@ -48,6 +48,7 @@ func (s *MemoryStore) Create(req CreateOrderRequest) (Order, error) {
 		Phone:           req.Phone,
 		Status:          req.Status,
 		NotifyStatus:    req.NotifyStatus,
+		CallbackURL:     req.CallbackURL,
 		CreatedAt:       now,
 		UpdatedAt:       now,
 	}
@@ -92,6 +93,7 @@ func (s *MemoryStore) Update(id string, req UpdateOrderRequest) (Order, error) {
 	order.Phone = req.Phone
 	order.Status = req.Status
 	order.NotifyStatus = req.NotifyStatus
+	order.CallbackURL = req.CallbackURL
 	order.UpdatedAt = now
 	s.orders[id] = order
 

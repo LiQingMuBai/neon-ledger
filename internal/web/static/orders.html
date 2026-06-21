@@ -71,6 +71,7 @@
                   <th>Telegram ID</th>
                   <th>金额</th>
                   <th>手机号</th>
+                  <th>回调URL</th>
                   <th>订单状态</th>
                   <th>通知状态</th>
                   <th>创建时间</th>
@@ -79,7 +80,7 @@
               </thead>
               <tbody id="ordersTableBody">
                 <tr>
-                  <td colspan="9" class="empty-cell">加载中</td>
+                  <td colspan="10" class="empty-cell">加载中</td>
                 </tr>
               </tbody>
             </table>
@@ -119,6 +120,10 @@
             <label>
               <span>手机号码</span>
               <input name="phone" inputmode="tel" placeholder="+8613800138000" pattern="\+[1-9][0-9]{6,14}" required />
+            </label>
+            <label>
+              <span>回调URL</span>
+              <input name="callback_url" type="url" placeholder="https://example.com/callback" />
             </label>
             <label>
               <span>订单状态</span>

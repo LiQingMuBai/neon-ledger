@@ -2,6 +2,7 @@ package orders
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -31,6 +32,7 @@ type Order struct {
 	Phone           string     `json:"phone"`
 	Status          string     `json:"status"`
 	NotifyStatus    string     `json:"notify_status"`
+	CallbackURL     string     `json:"callback_url"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
 	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
@@ -43,6 +45,7 @@ type CreateOrderRequest struct {
 	Phone           string `json:"phone"`
 	Status          string `json:"status"`
 	NotifyStatus    string `json:"notify_status"`
+	CallbackURL     string `json:"callback_url"`
 }
 
 type UpdateOrderRequest struct {
@@ -52,6 +55,7 @@ type UpdateOrderRequest struct {
 	Phone           string `json:"phone"`
 	Status          string `json:"status"`
 	NotifyStatus    string `json:"notify_status"`
+	CallbackURL     string `json:"callback_url"`
 }
 
 type QueryOrdersRequest struct {
@@ -118,6 +122,9 @@ func (r CreateOrderRequest) validate(now time.Time) error {
 	if r.NotifyStatus != "" && !isValidNotifyStatus(r.NotifyStatus) {
 		return errors.Join(ErrInvalidOrder, errors.New("notify_status must be pending, sent, or failed"))
 	}
+	if r.CallbackURL != "" && !isValidCallbackURL(r.CallbackURL) {
+		return errors.Join(ErrInvalidOrder, errors.New("callback_url must be a valid http or https url"))
+	}
 	_ = now
 	return nil
 }
@@ -144,6 +151,9 @@ func (r UpdateOrderRequest) validate() error {
 	if !isValidNotifyStatus(r.NotifyStatus) {
 		return errors.Join(ErrInvalidOrder, errors.New("notify_status must be pending, sent, or failed"))
 	}
+	if r.CallbackURL != "" && !isValidCallbackURL(r.CallbackURL) {
+		return errors.Join(ErrInvalidOrder, errors.New("callback_url must be a valid http or https url"))
+	}
 	return nil
 }
 
@@ -152,6 +162,7 @@ func normalizeOrderRequest(r CreateOrderRequest) CreateOrderRequest {
 	r.Phone = strings.TrimSpace(r.Phone)
 	r.Status = strings.ToLower(strings.TrimSpace(r.Status))
 	r.NotifyStatus = strings.ToLower(strings.TrimSpace(r.NotifyStatus))
+	r.CallbackURL = strings.TrimSpace(r.CallbackURL)
 	if r.Status == "" {
 		r.Status = OrderStatusPending
 	}
@@ -166,6 +177,7 @@ func normalizeUpdateOrderRequest(r UpdateOrderRequest) UpdateOrderRequest {
 	r.Phone = strings.TrimSpace(r.Phone)
 	r.Status = strings.ToLower(strings.TrimSpace(r.Status))
 	r.NotifyStatus = strings.ToLower(strings.TrimSpace(r.NotifyStatus))
+	r.CallbackURL = strings.TrimSpace(r.CallbackURL)
 	return r
 }
 
@@ -197,4 +209,12 @@ func isValidPhoneWithCountryCode(phone string) bool {
 		}
 	}
 	return true
+}
+
+func isValidCallbackURL(rawURL string) bool {
+	parsed, err := url.ParseRequestURI(rawURL)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return false
+	}
+	return parsed.Scheme == "http" || parsed.Scheme == "https"
 }

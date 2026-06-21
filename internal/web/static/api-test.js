@@ -14,6 +14,7 @@ const templates = [
       telegram_user_id: 987654321,
       amount: 3599,
       phone: "+8613800138000",
+      callback_url: "https://example.com/callback",
       status: "pending",
       notify_status: "pending",
     },

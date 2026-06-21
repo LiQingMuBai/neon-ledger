@@ -21,7 +21,8 @@ func TestCreateAndQueryOrders(t *testing.T) {
 		"customer_order_no":"C202606210001",
 		"telegram_user_id":987654321,
 		"amount":3599,
-		"phone":"+8613800138000"
+		"phone":"+8613800138000",
+		"callback_url":"https://example.com/callback"
 	}`)
 	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(createBody))
 	createResp := httptest.NewRecorder()
@@ -47,6 +48,9 @@ func TestCreateAndQueryOrders(t *testing.T) {
 	}
 	if created.NotifyStatus != NotifyStatusPending {
 		t.Fatalf("expected default notify status %s, got %s", NotifyStatusPending, created.NotifyStatus)
+	}
+	if created.CallbackURL != "https://example.com/callback" {
+		t.Fatalf("expected callback_url to be saved, got %q", created.CallbackURL)
 	}
 	if notifier.adminCount != 1 {
 		t.Fatalf("expected one admin notification, got %d", notifier.adminCount)
@@ -119,6 +123,29 @@ func TestCreateOrderRequiresAmountAtLeastTen(t *testing.T) {
 		"telegram_user_id":987654321,
 		"amount":9,
 		"phone":"+8613800138000"
+	}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(body))
+	resp := httptest.NewRecorder()
+
+	mux.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusBadRequest, resp.Code, resp.Body.String())
+	}
+}
+
+func TestCreateOrderValidatesCallbackURL(t *testing.T) {
+	store := NewMemoryStore()
+	handler := NewHandler(store)
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := []byte(`{
+		"customer_order_no":"C202606210105",
+		"telegram_user_id":987654321,
+		"amount":10,
+		"phone":"+8613800138000",
+		"callback_url":"not-a-url"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/orders", bytes.NewReader(body))
 	resp := httptest.NewRecorder()
@@ -400,6 +427,83 @@ func TestUpdateOrderSendsNotificationOnlyWhenNotifyStatusBecomesSent(t *testing.
 	}
 }
 
+func TestUpdateOrderSendsStatusCallbackWhenStatusChanges(t *testing.T) {
+	store := NewMemoryStore()
+	notifier := &recordingNotifier{}
+	callback := &recordingStatusCallback{}
+	handler := NewHandlerWithNotifierAndStatusCallback(store, notifier, callback)
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	created := createOrder(t, mux, `{"customer_order_no":"C202606210007","telegram_user_id":1001,"amount":1200,"phone":"+8613800138000","callback_url":"https://example.com/callback"}`)
+
+	updateBody := []byte(`{
+		"customer_order_no":"C202606210007",
+		"telegram_user_id":1001,
+		"amount":1200,
+		"phone":"+8613800138000",
+		"callback_url":"https://example.com/callback",
+		"status":"paid",
+		"notify_status":"pending"
+	}`)
+	updateReq := httptest.NewRequest(http.MethodPut, "/api/v1/orders/"+created.ID, bytes.NewReader(updateBody))
+	updateResp := httptest.NewRecorder()
+	mux.ServeHTTP(updateResp, updateReq)
+
+	if updateResp.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, updateResp.Code, updateResp.Body.String())
+	}
+	if callback.count != 1 {
+		t.Fatalf("expected one status callback, got %d", callback.count)
+	}
+	if callback.lastOrder.CustomerOrderNo != "C202606210007" ||
+		callback.lastOrder.PlatformOrderNo != created.PlatformOrderNo ||
+		callback.lastOrder.Status != OrderStatusPaid ||
+		callback.lastOrder.Phone != "+8613800138000" {
+		t.Fatalf("unexpected callback order: %+v", callback.lastOrder)
+	}
+
+	retryReq := httptest.NewRequest(http.MethodPut, "/api/v1/orders/"+created.ID, bytes.NewReader(updateBody))
+	retryResp := httptest.NewRecorder()
+	mux.ServeHTTP(retryResp, retryReq)
+
+	if retryResp.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, retryResp.Code, retryResp.Body.String())
+	}
+	if callback.count != 1 {
+		t.Fatalf("expected no duplicate status callback without status change, got %d", callback.count)
+	}
+}
+
+func TestUpdateOrderSkipsStatusCallbackWithoutCallbackURL(t *testing.T) {
+	store := NewMemoryStore()
+	callback := &recordingStatusCallback{}
+	handler := NewHandlerWithNotifierAndStatusCallback(store, NoopNotifier{}, callback)
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	created := createOrder(t, mux, `{"customer_order_no":"C202606210008","telegram_user_id":1001,"amount":1200,"phone":"+8613800138000"}`)
+
+	updateBody := []byte(`{
+		"customer_order_no":"C202606210008",
+		"telegram_user_id":1001,
+		"amount":1200,
+		"phone":"+8613800138000",
+		"status":"paid",
+		"notify_status":"pending"
+	}`)
+	updateReq := httptest.NewRequest(http.MethodPut, "/api/v1/orders/"+created.ID, bytes.NewReader(updateBody))
+	updateResp := httptest.NewRecorder()
+	mux.ServeHTTP(updateResp, updateReq)
+
+	if updateResp.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d: %s", http.StatusOK, updateResp.Code, updateResp.Body.String())
+	}
+	if callback.count != 0 {
+		t.Fatalf("expected no callback without callback_url, got %d", callback.count)
+	}
+}
+
 func TestUpdateOrderSkipsNotificationWithoutTelegramUserID(t *testing.T) {
 	store := NewMemoryStore()
 	notifier := &recordingNotifier{}
@@ -545,5 +649,16 @@ func (n *recordingNotifier) SendOrderNotification(_ context.Context, order Order
 func (n *recordingNotifier) SendAdminOrderCreatedNotification(_ context.Context, order Order) error {
 	n.adminCount++
 	n.lastAdminOrder = order
+	return nil
+}
+
+type recordingStatusCallback struct {
+	count     int
+	lastOrder Order
+}
+
+func (c *recordingStatusCallback) SendStatusCallback(_ context.Context, order Order) error {
+	c.count++
+	c.lastOrder = order
 	return nil
 }

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS bookkeeping_orders (
 	phone VARCHAR(32) NOT NULL,
 	status VARCHAR(32) NOT NULL DEFAULT 'pending',
 	notify_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+	callback_url VARCHAR(512) NOT NULL DEFAULT '',
 	created_at DATETIME(6) NOT NULL,
 	updated_at DATETIME(6) NOT NULL,
 	deleted_at DATETIME(6) NULL,
