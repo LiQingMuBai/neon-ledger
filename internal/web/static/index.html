@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="订单统计" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
     <link rel="manifest" href="/assets/manifest.webmanifest" />
     <title>30天订单趋势</title>
     <link rel="stylesheet" href="/assets/styles.css" />
@@ -14,13 +15,16 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Dashboard</p>
-          <h1>30天订单状态趋势</h1>
+        <div class="brand-heading">
+          <img class="brand-mark" src="/assets/logo.svg" alt="" />
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>30天订单状态趋势</h1>
+          </div>
         </div>
         <nav class="topbar-actions" aria-label="页面导航">
           <a class="nav-link" href="/orders">订单记录</a>
-          <a class="nav-link" href="/api-test" data-api-test-link>接口测试</a>
+          <a class="nav-link" href="/api-test" data-api-test-link hidden>接口测试</a>
           <a class="nav-link" href="/logout">退出</a>
           <button class="icon-button" id="refreshButton" type="button" title="刷新统计" aria-label="刷新统计">
             <span aria-hidden="true">↻</span>

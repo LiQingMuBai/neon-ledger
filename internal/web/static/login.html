@@ -4,13 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0f766e" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
     <title>登录</title>
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
     <main class="login-page">
       <section class="login-panel" aria-labelledby="loginTitle">
-        <p class="eyebrow">Bookkeeping API</p>
+        <div class="login-brand">
+          <img class="brand-mark" src="/assets/logo.svg" alt="" />
+          <p class="eyebrow">Bookkeeping API</p>
+        </div>
         <h1 id="loginTitle">登录</h1>
         <p class="login-error" id="loginError" hidden>用户名或密码错误</p>
         <form class="login-form" method="post" action="/login">

@@ -4,6 +4,7 @@ import (
 	"embed"
 	"io/fs"
 	"net/http"
+	"strings"
 )
 
 //go:embed static/*
@@ -16,11 +17,11 @@ func RegisterRoutes(mux *http.ServeMux, apiTestEnabled bool) error {
 	}
 
 	fileServer := http.FileServer(http.FS(content))
-	mux.Handle("/assets/", http.StripPrefix("/assets/", fileServer))
+	mux.Handle("/assets/", assetHandler(content, fileServer))
 	if apiTestEnabled {
 		mux.HandleFunc("/api-test", func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/api-test" {
-				http.NotFound(w, r)
+				ServeNotFound(w, r)
 				return
 			}
 			http.ServeFileFS(w, r, content, "api-test.html")
@@ -28,14 +29,14 @@ func RegisterRoutes(mux *http.ServeMux, apiTestEnabled bool) error {
 	}
 	mux.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/orders" {
-			http.NotFound(w, r)
+			ServeNotFound(w, r)
 			return
 		}
 		http.ServeFileFS(w, r, content, "orders.html")
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
-			http.NotFound(w, r)
+			ServeNotFound(w, r)
 			return
 		}
 		http.ServeFileFS(w, r, content, "index.html")
@@ -50,6 +51,36 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.ServeFileFS(w, r, content, "login.html")
+}
+
+func ServeNotFound(w http.ResponseWriter, r *http.Request) {
+	content, err := staticContent()
+	if err != nil {
+		http.Error(w, "page not found", http.StatusNotFound)
+		return
+	}
+	data, err := fs.ReadFile(content, "404.html")
+	if err != nil {
+		http.Error(w, "page not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusNotFound)
+	if r.Method != http.MethodHead {
+		_, _ = w.Write(data)
+	}
+}
+
+func assetHandler(content fs.FS, fileServer http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assetPath := strings.TrimPrefix(r.URL.Path, "/assets/")
+		info, err := fs.Stat(content, assetPath)
+		if assetPath == "" || err != nil || info.IsDir() {
+			ServeNotFound(w, r)
+			return
+		}
+		http.StripPrefix("/assets/", fileServer).ServeHTTP(w, r)
+	})
 }
 
 func staticContent() (fs.FS, error) {

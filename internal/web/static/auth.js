@@ -19,10 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     const config = await response.json();
-    if (config.api_test_enabled === false) {
-      document.querySelectorAll("[data-api-test-link]").forEach((element) => {
-        element.hidden = true;
-      });
-    }
+    document.querySelectorAll("[data-api-test-link]").forEach((element) => {
+      element.hidden = config.api_test_enabled !== true;
+    });
   } catch {}
 });
